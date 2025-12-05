@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="#✨-核心特性">特性</a> •
-  <a href="#🚀 一键部署">部署</a> •
+  <a href="#快速部署">快速部署</a> •
   <a href="#⬆️-版本升级">升级</a> •
   <a href="#🛠️-自定义开发">开发</a> •
   <a href="#🌟-贡献">贡献</a> •
@@ -57,66 +57,55 @@
  **Fork 项目**: 点击上方"Fork on GitHub"按钮，，并点上 Star !!!
 ### 步骤 2: 部署到Cloudflare Pages
 [![Deploy to Cloudflare Pages](https://img.shields.io/badge/Deploy-Cloudflare%20Pages-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://dash.cloudflare.com/?to=/:account/pages/new/provider/github)
-点击上方"DEPLOY  CLOUDFLARE PAGES"按钮,跳转到Cloudflare，然后选连接到Github，授权后选择刚才fork的项目，
-### 步骤 2: 部署到Cloudflare Pages
+点击上方"DEPLOY  CLOUDFLARE PAGES"按钮,跳转到Cloudflare，然后选连接到Github，授权后选择刚才fork的项目
 
-1.  在 Cloudflare 控制台，进入 `Workers & Pages` -> `D1`。
+<img width="2252" height="1380" alt="image" src="https://github.com/user-attachments/assets/0588e0d0-befb-4962-b422-922a8c895674" />
+点击开始设置后，需要填写 构建输出目录 为：public，其他保持默认即可。
+<img width="2112" height="1404" alt="image" src="https://github.com/user-attachments/assets/654a23af-d75f-477d-848e-fea8a41740dc" />
+
+
+### 步骤 3: 创建D1数据库
+
+1.  在 Cloudflare 控制台，进入 `存储和数据库` -> `D1 SQL数据库`。
 2.  点击 `创建数据库`，数据库名称输入 `book`，然后创建。
 
-    ![创建D1数据库](https://github.com/user-attachments/assets/f49d61ea-a87b-42ed-a460-98e53fb340e0)
+<img width="2836" height="1298" alt="image" src="https://github.com/user-attachments/assets/644032c6-304c-46cc-b039-9eafbc6f7a6b" />
 
 
-### 步骤 2: 创建 KV 存储
 
-1.  在 Cloudflare 控制台，进入 `Workers & Pages` -> `KV`。
+### 步骤 4: 创建 KV 存储
+
+1.  在 Cloudflare 控制台，进入 存储和数据库` -> `Worker KV`。
 2.  点击 `创建命名空间`，名称输入 `NAV_AUTH`。
 
-    ![创建KV](https://github.com/user-attachments/assets/ed274f2d-2bf0-4f26-aa86-90e22286e94b)
+    <img width="2744" height="974" alt="image" src="https://github.com/user-attachments/assets/11d08862-7887-4883-97ce-390780e7fccd" />
 
 3.  创建后，为此 KV 添加两个条目，用于设置后台登录的 **用户名** 和 **密码**。
     -   **admin_username**: 你的管理员用户名（例如 `admin`）
     -   **admin_password**: 你的管理员密码
 
-    ![设置KV键值对](https://github.com/user-attachments/assets/2fd5742f-5709-4ad9-b4fa-865cbca0bb8e)
+    <img width="2810" height="1188" alt="image" src="https://github.com/user-attachments/assets/2114e42b-03d2-400f-a8f8-54dc156a7922" />
 
 
-## 🚀 一键部署
+### 步骤 5: 绑定服务
 
-
-
-### 部署步骤:
-
-
-2. **连接到 Cloudflare Pages**: 
-   - 点击上方"Deploy to Cloudflare Pages"按钮
-   - 登录后会自动跳转到 GitHub 连接页面
-   - 授权并选择你 Fork 的 `iori-nav` 仓库
-   - 配置构建设置(保持默认即可)
-   - 点击"保存并部署"
-3. **配置数据库和存储**: 完成后续的 D1 和 KV 配置(见下方详细步骤) 👇
-
-
-
-
-### 步骤 4: 绑定服务
-
-1.  进入你刚刚创建的 Worker 的 `设置` -> `变量`。
-2.  在 **D1 数据库绑定** 中，点击 `添加绑定`：
+1.  进入你刚刚创建的 Pages项目 的 `设置` -> `绑定`。
+2.  点击 `添加绑定`，选择 `D1 数据库`：
     -   变量名称: `NAV_DB`
     -   D1 数据库: 选择你创建的 `book`
-3.  在 **KV 命名空间绑定** 中，点击 `添加绑定`：
+3.  点击 `添加绑定`，选择 `KV 命名空间`：：
     -   变量名称: `NAV_AUTH`
     -   KV 命名空间: 选择你创建的 `NAV_AUTH`
+      
+  <img width="2152" height="1236" alt="image" src="https://github.com/user-attachments/assets/9dd15cd0-8173-4dec-af87-d8ef0bdeaa38" />
 
-    ![绑定服务](https://github.com/user-attachments/assets/269f4678-4e8a-4dbd-a8d7-f186466f4380)
 
-### 步骤 5: 开始使用
+### 步骤 6: 重新部署
 
-1.  访问你的 Worker 域名（例如 `my-nav.your-subdomain.workers.dev`）。首次访问会提示没有数据。
-2.  访问 `你的域名/admin` 进入后台，使用你在 **步骤 2** 中设置的用户名和密码登录。
-3.  在后台添加第一个书签后，首页即可正常显示。
+1.  点击项目的 部署 选项，在最后一次的部署后边，选择重新部署，等待部署完成，绑定自定义域名即可开始使用。
 
-    ![后台登录](https://github.com/user-attachments/assets/284e3560-284f-4313-a7c6-d651d2e25c00)
+    <img width="2482" height="1374" alt="image" src="https://github.com/user-attachments/assets/d2f12af3-9aba-458e-9d16-00f7468c22e9" />
+
 
 
 ## 🔑 环境变量说明
