@@ -52,25 +52,35 @@ export async function onRequestPut(context) {
       return errorResponse('Category name is required', 400);
     }
 
-    const existingCategory = await env.NAV_DB.prepare('SELECT id FROM category WHERE catelog = ? AND id != ?')
-      .bind(catelog, categoryId)
+    const parentId = body.parent_id !== undefined ? parseInt(body.parent_id, 10) : 0;
+
+    // 检查在同一个父分类下，分类名称是否已存在（排除自身）
+    const existingCategory = await env.NAV_DB.prepare('SELECT id FROM category WHERE catelog = ? AND parent_id = ? AND id != ?')
+      .bind(catelog, parentId, categoryId)
       .first();
 
     if (existingCategory) {
-      return errorResponse('Category name already exists', 409);
+      return errorResponse('该分类名称在当前父分类下已存在', 409);
     }
 
     sort_order = normalizeSortOrder(sort_order);
-    const parentId = body.parent_id !== undefined ? parseInt(body.parent_id, 10) : 0;
+    const isPrivate = body.is_private ? 1 : 0;
 
-    await env.NAV_DB.prepare('UPDATE category SET catelog = ?, sort_order = ?, parent_id = ? WHERE id = ?')
-      .bind(catelog, sort_order, parentId, categoryId)
+    await env.NAV_DB.prepare('UPDATE category SET catelog = ?, sort_order = ?, parent_id = ?, is_private = ? WHERE id = ?')
+      .bind(catelog, sort_order, parentId, isPrivate, categoryId)
       .run();
       
     // Sync update sites table redundant column
     await env.NAV_DB.prepare('UPDATE sites SET catelog_name = ? WHERE catelog_id = ?')
       .bind(catelog, categoryId)
       .run();
+
+    // If category is set to private, force all sites in this category to be private
+    if (isPrivate === 1) {
+        await env.NAV_DB.prepare('UPDATE sites SET is_private = 1 WHERE catelog_id = ?')
+          .bind(categoryId)
+          .run();
+    }
 
     return jsonResponse({
       code: 200,

@@ -10,6 +10,12 @@ export async function onRequestGet(context) {
     return errorResponse('config not found', 404);
   }
   const config = results[0];
+  
+  // 私密站点需要认证才能访问
+  if (config.is_private && !(await isAdminAuthenticated(request, env))) {
+    return errorResponse('config not found', 404);
+  }
+  
   return jsonResponse({
     code: 200,
     data: config
@@ -38,27 +44,30 @@ export async function onRequestPut(context) {
     if (!sanitizedName || !sanitizedUrl || !catelog_id) {
       return errorResponse('Name, URL and Catelog are required', 400);
     }
-    const iconAPI=env.ICON_API ||'https://favicon.im/';
+    const iconAPI=env.ICON_API ||'https://faviconsnap.com/api/favicon?url=';
     if(!logo && url){
       if(url.startsWith('https://') || url.startsWith('http://')){
         const domain = url.replace(/^https?:\/\//, '').split('/')[0];
         sanitizedLogo = iconAPI+domain;
-        if(!env.ICON_API){
-          sanitizedLogo+='?larger=true'
-        }
       }
       
     }
 
     // Fetch category name
-    const categoryResult = await env.NAV_DB.prepare('SELECT catelog FROM category WHERE id = ?').bind(catelog_id).first();
+    const categoryResult = await env.NAV_DB.prepare('SELECT catelog, is_private FROM category WHERE id = ?').bind(catelog_id).first();
     const catelogName = categoryResult ? categoryResult.catelog : 'Unknown';
+
+    // If category is private, force site to be private
+    let finalIsPrivate = isPrivateValue;
+    if (categoryResult && categoryResult.is_private === 1) {
+        finalIsPrivate = 1;
+    }
 
     const update = await env.NAV_DB.prepare(`
       UPDATE sites
       SET name = ?, url = ?, logo = ?, desc = ?, catelog_id = ?, catelog_name = ?, sort_order = ?, is_private = ?, update_time = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).bind(sanitizedName, sanitizedUrl, sanitizedLogo, sanitizedDesc, catelog_id, catelogName, sortOrderValue, isPrivateValue, id).run();
+    `).bind(sanitizedName, sanitizedUrl, sanitizedLogo, sanitizedDesc, catelog_id, catelogName, sortOrderValue, finalIsPrivate, id).run();
 
     return jsonResponse({
       code: 200,
